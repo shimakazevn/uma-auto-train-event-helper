@@ -15,12 +15,19 @@ def focus_umamusume():
   win.maximize()
   time.sleep(0.5)
 
+def wait_for_game_start():
+  while True:
+    time.sleep(1)
+    if gw.getActiveWindow().title == "Umamusume":
+      break
+
 def main():
   print("Uma Auto!")
   original_screen_size = get_screen_size()
   
   try:
     set_screen_size(1920, 1080)
+    wait_for_game_start()
     focus_umamusume()
     
     career_lobby()
