@@ -1,7 +1,8 @@
 # Umamusume Auto Training Bot
  
 Like the title says, this is a simple auto training for Umamusume.
-
+Warning: need FullHD(1080P) or bigger screen monitor !
+if u have 2k or 4k monitor, screen will change the resolution.
 This project is inspired by [samsulpanjul/umamusume-auto-train](https://github.com/samsulpanjul/umamusume-auto-train)
 
 [Demo video](https://youtu.be/CXSYVD-iMJk)

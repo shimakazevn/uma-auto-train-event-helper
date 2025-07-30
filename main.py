@@ -24,15 +24,28 @@ def wait_for_game_start():
 def main():
   print("Uma Auto!")
   original_screen_size = get_screen_size()
+  width, height = original_screen_size
+
+  if width < 1920 or height < 1080:
+    print("Error: Screen resolution must be at least 1920x1080.")
+    return
   
-  try:
+  resolution_changed = False
+  if width != 1920 or height != 1080:
+    print("Change resolution to 1920x1080.")
     set_screen_size(1920, 1080)
+    resolution_changed = True
+    print("Please press the game to continue.")
+  try:
     wait_for_game_start()
+
     focus_umamusume()
-    
+
     career_lobby()
   finally:
-    set_screen_size(original_screen_size[0], original_screen_size[1])
+    if resolution_changed:
+      print("Restore screen resolution.")
+      set_screen_size(original_screen_size[0], original_screen_size[1])
 
 
 if __name__ == "__main__":
