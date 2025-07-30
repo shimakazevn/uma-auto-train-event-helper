@@ -2,6 +2,7 @@ import time
 import pygetwindow as gw
 
 from core.execute import career_lobby
+from core.screen import get_screen_size, set_screen_size
 
 def focus_umamusume():
   windows = gw.getWindowsWithTitle("Umamusume")
@@ -16,9 +17,16 @@ def focus_umamusume():
 
 def main():
   print("Uma Auto!")
-  focus_umamusume()
+  original_screen_size = get_screen_size()
   
-  career_lobby()
+  try:
+    set_screen_size(1920, 1080)
+    focus_umamusume()
+    
+    career_lobby()
+  finally:
+    set_screen_size(original_screen_size[0], original_screen_size[1])
+
 
 if __name__ == "__main__":
   main()
