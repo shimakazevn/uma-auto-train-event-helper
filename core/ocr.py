@@ -4,24 +4,13 @@ import numpy as np
 import os
 
 # Configure Tesseract to use the custom trained data
-tessdata_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tessdata')
-os.environ['TESSDATA_PREFIX'] = tessdata_dir
+tesseract_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'Tesseract-OCR')
+tessdata_dir = os.path.join(tesseract_dir, 'tessdata')
 
-# Try to find tesseract executable automatically
-try:
-    # On Windows, try common installation paths
-    if os.name == 'nt':
-        possible_paths = [
-            r'C:\Program Files\Tesseract-OCR\tesseract.exe',
-            r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
-            r'C:\Users\{}\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'.format(os.getenv('USERNAME', ''))
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                pytesseract.pytesseract.tesseract_cmd = path
-                break
-except Exception:
-    pass  # Fall back to system PATH
+if os.name == 'nt':
+    pytesseract.pytesseract.tesseract_cmd = os.path.join(tesseract_dir, 'tesseract.exe')
+
+os.environ['TESSDATA_PREFIX'] = tessdata_dir
 
 def extract_text(pil_img: Image.Image) -> str:
     """Extract text from image using Tesseract OCR"""
