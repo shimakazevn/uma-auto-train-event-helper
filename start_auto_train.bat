@@ -43,6 +43,26 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
+REM Kiem tra Tesseract
+where tesseract >nul 2>nul
+IF %ERRORLEVEL% NEQ 0 (
+    ECHO Tesseract OCR chua duoc cai dat.
+    where winget >nul 2>nul
+    IF %ERRORLEVEL% EQU 0 (
+        ECHO Dang thu cai dat Tesseract OCR bang winget...
+        winget install --id Tesseract.Tesseract -e --source winget --silent --accept-source-agreements --accept-package-agreements
+        IF %ERRORLEVEL% EQU 0 (
+            ECHO Cai dat Tesseract OCR thanh cong. Vui long chay lai file nay de tiep tuc.
+        ) ELSE (
+            ECHO Cai dat Tesseract OCR that bai. Vui long cai dat thu cong roi chay lai file.
+        )
+    ) ELSE (
+        ECHO winget khong ton tai. Vui long cai dat Tesseract OCR thu cong roi chay lai file.
+    )
+    pause > nul
+    exit /b
+)
+
 ECHO Tat ca phan mem can thiet da san sang.
 ECHO.
 
