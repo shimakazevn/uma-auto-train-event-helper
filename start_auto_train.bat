@@ -1,6 +1,5 @@
 @echo off
 
-ECHO Kiem tra quyen Administrator...
 net session >nul 2>&1
 
 
