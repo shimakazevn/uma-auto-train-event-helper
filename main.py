@@ -11,14 +11,18 @@ def focus_umamusume():
   win = windows[0]
   if win.isMinimized:
     win.restore()
-  win.activate()
+  
+  if not win.isActive:
+    win.activate()
+
   win.maximize()
   time.sleep(0.5)
 
 def wait_for_game_start():
   while True:
     time.sleep(1)
-    if gw.getActiveWindow().title == "Umamusume":
+    active_window = gw.getActiveWindow()
+    if active_window and active_window.title == "Umamusume":
       break
 
 def main():
