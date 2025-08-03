@@ -1,10 +1,56 @@
 @echo off
+title Uma Musume Auto Train Launcher
+color 0B
 
+REM Kiem tra quyen Admin
 net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo [+] Dang chay voi quyen Admin
+) else (
+    echo [-] Chuong trinh can quyen Admin de cai dat...
+    echo [*] Dang yeu cau quyen Admin...
+    
+    powershell -Command "Start-Process -FilePath '%0' -Verb RunAs"
+    exit /b
+)
 
+:MENU
+cls
+echo ======================================
+echo    UMA MUSUME AUTO TRAIN LAUNCHER
+echo ======================================
+echo.
+echo [1] Khoi dong bot
+echo [2] Cap nhat tu GitHub
+echo [3] Cai dat/Cap nhat phu thuoc
+echo [4] Sao luu config
+echo [5] Khoi phuc config
+echo [6] Kiem tra phan mem
+echo [0] Thoat
+echo.
+echo ======================================
 
-ECHO Kiem tra cac phan mem can thiet...
-ECHO.
+set /p choice="Nhap lua chon cua ban: "
+
+if "%choice%"=="1" goto START_BOT
+if "%choice%"=="2" goto UPDATE
+if "%choice%"=="3" goto INSTALL_DEPS
+if "%choice%"=="4" goto BACKUP_CONFIG
+if "%choice%"=="5" goto RESTORE_CONFIG
+if "%choice%"=="6" goto CHECK_DEPS
+if "%choice%"=="0" exit
+
+echo.
+echo Lua chon khong hop le!
+timeout /t 2 >nul
+goto MENU
+
+:CHECK_DEPS
+cls
+echo ======================================
+echo      KIEM TRA PHAN MEM CAN THIET
+echo ======================================
+echo.
 
 REM Kiem tra Git
 where git >nul 2>nul
@@ -71,32 +117,108 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 
-ECHO Tat ca phan mem can thiet da san sang.
-ECHO.
+REM Kiem tra Tesseract OCR
+set "TESSERACT_DIR=%~dp0Tesseract-OCR"
+if not exist "%TESSERACT_DIR%\tesseract.exe" (
+    ECHO [-] Tesseract OCR chua duoc cai dat.
+    ECHO [*] Vui long tai ve thu cong tu GitHub releases.
+    pause
+    goto MENU
+) else (
+    ECHO [+] Da tim thay Tesseract OCR
+)
 
-echo Bo qua theo doi file config.json de giu lai cau hinh local...
+ECHO.
+ECHO [+] Tat ca phan mem can thiet da san sang.
+timeout /t 2 >nul
+goto MENU
+
+:START_BOT
+cls
+echo ======================================
+echo          KHOI DONG UMA BOT
+echo ======================================
+echo.
+echo [*] Dang khoi dong bot...
+python main.py
+echo.
+echo [*] Bot da dung. Nhan phim bat ky de tro ve menu.
+pause >nul
+goto MENU
+
+:UPDATE
+cls
+echo ======================================
+echo        CAP NHAT TU GITHUB
+echo ======================================
+echo.
+echo [*] Bo qua theo doi file config.json...
 git update-index --assume-unchanged config.json
 
 echo.
-echo Dang cap nhat tu Git...
+echo [*] Dang cap nhat tu Git...
 git pull
 IF %ERRORLEVEL% NEQ 0 (
     echo.
-    echo Update that bai, vui long kiem tra lai.
-    pause > nul
-    exit /b
+    echo [-] Cap nhat that bai!
+    timeout /t 2 >nul
+    goto MENU
 )
+echo [+] Cap nhat thanh cong!
+timeout /t 2 >nul
+goto MENU
 
+:INSTALL_DEPS
+cls
+echo ======================================
+echo      CAI DAT GOI PHU THUOC
+echo ======================================
 echo.
-echo Cai dat cac goi phu thuoc...
+echo [*] Dang cai dat tu requirements.txt...
 pip install -r requirements.txt
+echo.
+echo [+] Cai dat hoan tat!
+timeout /t 2 >nul
+goto MENU
 
+:BACKUP_CONFIG
+cls
+echo ======================================
+echo         SAO LUU CONFIG
+echo ======================================
 echo.
-echo Khoi chay umamusume auto train...
-python main.py
+if not exist "backups" mkdir backups
+copy /y config.json "backups\config_%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%.json" >nul
+echo [+] Da sao luu config.json!
+timeout /t 2 >nul
+goto MENU
+
+:RESTORE_CONFIG
+cls
+echo ======================================
+echo        KHOI PHUC CONFIG
+echo ======================================
 echo.
-echo Cap nhat va thuc thi hoan tat. An phim bat ky de thoat.
-pause > nul
+if not exist "backups\*.json" (
+    echo [-] Khong tim thay ban sao luu!
+    timeout /t 2 >nul
+    goto MENU
+)
+echo Cac ban sao luu hien co:
+echo.
+dir /b "backups\*.json"
+echo.
+set /p "backup=Nhap ten file muon khoi phuc (hoac ENTER de huy): "
+if "%backup%"=="" goto MENU
+if not exist "backups\%backup%" (
+    echo [-] Khong tim thay file!
+    timeout /t 2 >nul
+    goto MENU
+)
+copy /y "backups\%backup%" config.json >nul
+echo [+] Da khoi phuc config tu ban sao %backup%
+timeout /t 2 >nul
+goto MENU
 pause
 exit /b
 
