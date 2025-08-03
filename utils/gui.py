@@ -1,74 +1,55 @@
 import tkinter as tk
 from tkinter import ttk
 import json
-import threading
 from tkinter import scrolledtext
 import datetime
-import keyboard
 
 class BotGUI:
     def __init__(self, root, start_callback=None, stop_callback=None):
         self.root = root
         self.root.title("Uma Musume Auto Train")
-        self.root.geometry("500x1000")
+        self.root.geometry("400x700")
+        self.root.resizable(False, False)  # Disable window resizing
         
-        # Handle window close
+        # Prevent minimizing
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         # Set window to always on top
         self.root.attributes('-topmost', True)
         
-        # Add pin/unpin button state
-        self.is_pinned = True
-        
         # Callbacks
         self.start_callback = start_callback
-        self.stop_callback = stop_callback
         self.is_running = False
         
-        # Bind Ctrl+C to stop bot (both in GUI and globally)
-        self.root.bind('<Control-c>', self._handle_stop_hotkey)
-        keyboard.add_hotkey('ctrl+c', self._handle_stop_hotkey)
+        # Create notebook for tabs
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
         
-        # Create main container frame
-        self.main_frame = ttk.Frame(root)
-        self.main_frame.pack(expand=True, fill='both', padx=5, pady=5)
+        # Create main and config tabs
+        self.main_tab = ttk.Frame(self.notebook)
+        self.config_tab = ttk.Frame(self.notebook)
         
-        # Create control and config frames
-        self.control_frame = ttk.Frame(self.main_frame)
-        self.control_frame.pack(expand=True, fill='both')
-        self.config_frame = ttk.Frame(self.main_frame)
+        self.notebook.add(self.main_tab, text='Bot')
+        self.notebook.add(self.config_tab, text='Config')
         
-        self._setup_control_tab()
+        self._setup_main_tab()
         self._setup_config_tab()
         
         # Load config
         self.load_config()
     
-    def _setup_control_tab(self):
+    def _setup_main_tab(self):
         # Button frame at the top
-        button_frame = ttk.Frame(self.control_frame)
+        button_frame = ttk.Frame(self.main_tab)
         button_frame.pack(fill='x', padx=5, pady=5)
         
         # Start button
         self.start_button = ttk.Button(button_frame, text="Start", command=self._start_bot)
         self.start_button.pack(side='left', padx=5)
-        
-        # Stop button (initially disabled)
-        self.stop_button = ttk.Button(button_frame, text="Stop", command=self._stop_bot, state='disabled')
-        self.stop_button.pack(side='left', padx=5)
-        
-        # Pin button
-        self.pin_button = ttk.Button(button_frame, text="Unpin", command=self._toggle_pin)
-        self.pin_button.pack(side='right', padx=5)
-        
-        # Config button
-        self.config_button = ttk.Button(button_frame, text="Config", command=self._toggle_config)
-        self.config_button.pack(side='right', padx=5)
-        
+
         # Log area taking most of the space
         self.log_area = scrolledtext.ScrolledText(
-            self.control_frame,
+            self.main_tab,
             wrap=tk.WORD,
             height=45,  # Increased height for more visible logs
             font=('Consolas', 10),
@@ -84,104 +65,197 @@ class BotGUI:
         self.log_area.tag_configure('info', foreground='#75BEFF')       # Light blue
         self.log_area.tag_configure('debug', foreground='#B180D7')      # Purple
     
-    def _toggle_config(self):
-        """Toggle between main log view and config view"""
-        if self.config_frame.winfo_ismapped():
-            self.config_frame.pack_forget()
-            self.control_frame.pack(expand=True, fill='both')
-            self.config_button.configure(text="Config")
-        else:
-            self.control_frame.pack_forget()
-            self.config_frame.pack(expand=True, fill='both')
-            self.config_button.configure(text="Back")
-
     def _setup_config_tab(self):
-        # Config editor with dark theme
-        self.config_editor = scrolledtext.ScrolledText(
-            self.config_frame,
-            wrap=tk.WORD,
-            height=45,
-            font=('Consolas', 10),
-            background='#1E1E1E',
-            foreground='#CCCCCC',
-        )
-        self.config_editor.pack(fill='both', expand=True, padx=5, pady=5)
+        # Main config frame with scrollbar
+        main_frame = ttk.Frame(self.config_tab)
+        main_frame.pack(fill='both', expand=True, padx=5, pady=5)
         
-        # Save button frame
-        button_frame = ttk.Frame(self.config_frame)
-        button_frame.pack(fill='x', padx=5, pady=5)
+        # Create canvas with scrollbar
+        canvas = tk.Canvas(main_frame)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        self.config_frame = ttk.Frame(canvas)
         
-        # Save button
-        save_button = ttk.Button(button_frame, text="Save Config", command=self.save_config)
-        save_button.pack(side='right', padx=5)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack scrollbar and canvas
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        # Create window in canvas
+        canvas_frame = canvas.create_window((0,0), window=self.config_frame, anchor="nw")
+        
+        # Configure canvas scroll region when frame size changes
+        def configure_scroll_region(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        self.config_frame.bind('<Configure>', configure_scroll_region)
+        
+        # Configure canvas width when window resizes
+        def configure_canvas_width(event):
+            canvas.itemconfig(canvas_frame, width=event.width)
+        canvas.bind('<Configure>', configure_canvas_width)
+        
+        # Priority Stats Section
+        self._create_section_label("Training Priority")
+        self.priority_vars = []
+        stats = ["Speed", "Stamina", "Power", "Guts", "Wisdom"]
+        for i, stat in enumerate(stats):
+            var = tk.StringVar(value=str(i+1))
+            self._create_priority_entry(stat, var)
+            self.priority_vars.append(var)
+            
+        # Basic Settings Section
+        self._create_section_label("Basic Settings")
+        
+        # Minimum Mood
+        self.mood_var = tk.StringVar(value="GOOD")
+        mood_frame = ttk.Frame(self.config_frame)
+        mood_frame.pack(fill='x', padx=10, pady=2)
+        ttk.Label(mood_frame, text="Minimum Mood:").pack(side='left')
+        mood_combo = ttk.Combobox(mood_frame, textvariable=self.mood_var, 
+                                values=["GOOD", "NORMAL", "BAD"], width=10)
+        mood_combo.pack(side='right')
+        
+        # Maximum Failures
+        self.max_failure_var = tk.StringVar(value="15")
+        self._create_number_entry("Maximum Failures", self.max_failure_var)
+        
+        # Skill Point Settings
+        self._create_section_label("Skill Point Settings")
+        
+        self.skill_cap_var = tk.StringVar(value="1000")
+        self._create_number_entry("Skill Point Cap", self.skill_cap_var)
+        
+        # Skill Point Check Options
+        options_frame = ttk.Frame(self.config_frame)
+        options_frame.pack(fill='x', padx=10, pady=2)
+        
+        self.enable_sp_check_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(options_frame, text="Enable Skill Point Check", 
+                       variable=self.enable_sp_check_var).pack(side='left', padx=(0,10))
+                       
+        self.prioritize_g1_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(options_frame, text="Prioritize G1 Race", 
+                       variable=self.prioritize_g1_var).pack(side='left')
+        
+        # Race Settings
+        self._create_section_label("Race Settings")
+        
+        self.min_support_var = tk.StringVar(value="0")
+        self._create_number_entry("Minimum Support Rating", self.min_support_var)
+        
+        self.do_race_var = tk.BooleanVar(value=False)
+        check_frame = ttk.Frame(self.config_frame)
+        check_frame.pack(fill='x', padx=10, pady=2)
+        ttk.Checkbutton(check_frame, text="Do Race When Bad Training", 
+                       variable=self.do_race_var).pack(side='left')
+        
+        # Stat Caps Section
+        self._create_section_label("Stat Caps")
+        self.stat_caps = {}
+        for stat in ["Speed", "Stamina", "Power", "Guts", "Wisdom"]:
+            var = tk.StringVar(value="1100" if stat in ["Speed", "Stamina"] else "600")
+            self._create_number_entry(f"{stat} Cap", var)
+            self.stat_caps[stat.lower()[:3]] = var
+            
+        # Save Button
+        save_frame = ttk.Frame(self.config_tab)
+        save_frame.pack(fill='x', padx=5, pady=5)
+        save_button = ttk.Button(save_frame, text="Save Config", command=self.save_config)
+        save_button.pack(side='right')
     
+    def _create_section_label(self, text):
+        """Create a section header label"""
+        label_frame = ttk.Frame(self.config_frame)
+        label_frame.pack(fill='x', padx=5, pady=(10,5))
+        label = ttk.Label(label_frame, text=text, font=('Helvetica', 10, 'bold'))
+        label.pack(side='left')
+        ttk.Separator(self.config_frame).pack(fill='x', padx=5)
+        
+    def _create_number_entry(self, label_text, var):
+        """Create a labeled number entry"""
+        frame = ttk.Frame(self.config_frame)
+        frame.pack(fill='x', padx=10, pady=2)
+        ttk.Label(frame, text=label_text + ":").pack(side='left')
+        entry = ttk.Entry(frame, textvariable=var, width=10)
+        entry.pack(side='right')
+        
+    def _create_priority_entry(self, stat_name, var):
+        """Create a priority entry with up/down buttons"""
+        frame = ttk.Frame(self.config_frame)
+        frame.pack(fill='x', padx=10, pady=2)
+        ttk.Label(frame, text=f"{stat_name} Priority:").pack(side='left')
+        
+        entry = ttk.Entry(frame, textvariable=var, width=5)
+        entry.pack(side='right')
+        
     def load_config(self):
         try:
             with open('config.json', 'r', encoding='utf-8') as f:
                 config = json.load(f)
-                formatted_config = json.dumps(config, indent=4)
-                self.config_editor.delete('1.0', tk.END)
-                self.config_editor.insert('1.0', formatted_config)
+                
+                # Load priority stats
+                for i, stat in enumerate(['spd', 'sta', 'pwr', 'guts', 'wit']):
+                    if i < len(config.get('priority_stat', [])):
+                        self.priority_vars[i].set(str(i+1))
+                
+                # Load basic settings
+                self.mood_var.set(config.get('minimum_mood', 'GOOD'))
+                self.max_failure_var.set(str(config.get('maximum_failure', 15)))
+                
+                # Load skill point settings
+                self.skill_cap_var.set(str(config.get('skill_point_cap', 1000)))
+                self.enable_sp_check_var.set(config.get('enable_skill_point_check', True))
+                self.prioritize_g1_var.set(config.get('prioritize_g1_race', True))
+                
+                # Load race settings
+                self.min_support_var.set(str(config.get('min_support', 0)))
+                self.do_race_var.set(config.get('do_race_when_bad_training', False))
+                
+                # Load stat caps
+                stat_caps = config.get('stat_caps', {})
+                for stat, var in self.stat_caps.items():
+                    var.set(str(stat_caps.get(stat, 1100 if stat in ['spd', 'sta'] else 600)))
+                
         except Exception as e:
             self.log(f"Error loading config: {str(e)}")
     
     def save_config(self):
         try:
-            config_text = self.config_editor.get('1.0', tk.END).strip()
-            config = json.loads(config_text)
+            config = {
+                'priority_stat': [s.lower()[:3] for s in ['Speed', 'Stamina', 'Power', 'Guts', 'Wisdom']],
+                'minimum_mood': self.mood_var.get(),
+                'maximum_failure': int(self.max_failure_var.get()),
+                'prioritize_g1_race': self.prioritize_g1_var.get(),
+                'skill_point_cap': int(self.skill_cap_var.get()),
+                'enable_skill_point_check': self.enable_sp_check_var.get(),
+                'min_support': int(self.min_support_var.get()),
+                'do_race_when_bad_training': self.do_race_var.get(),
+                'stat_caps': {
+                    stat: int(var.get())
+                    for stat, var in self.stat_caps.items()
+                }
+            }
+            
             with open('config.json', 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=4)
-            self.log("Config saved successfully")
+            self.log("[SUCCESS] Config saved successfully")
         except Exception as e:
-            self.log(f"Error saving config: {str(e)}")
+            self.log(f"[ERROR] Error saving config: {str(e)}")
     
     def _start_bot(self):
         if not self.is_running and self.start_callback:
             self.is_running = True
             self.start_button.configure(state='disabled')
-            self.stop_button.configure(state='normal')
             self.start_callback()
             self.log("Bot started successfully")
-            self.log( "please click into the game window to focus it")
-    def _handle_stop_hotkey(self, event=None):
-        """Handle stop hotkey (Ctrl+C) from both GUI and global keyboard"""
-        if self.is_running:
-            self._stop_bot()
-    
-    def _stop_bot(self):
-        """Stop the bot and update UI"""
-        if not self.is_running:
-            return
-            
-        try:
-            # Call stop callback first
-            if self.stop_callback:
-                self.stop_callback()
-            
-            # Then update UI
-            self.is_running = False
-            self.start_button.configure(state='normal')
-            self.stop_button.configure(state='disabled')
-            self.root.focus_force()  # Focus the GUI window
-            self.log("Bot stopped (Press Ctrl+C or Stop button to stop again)")
-        except Exception as e:
-            self.log(f"[ERROR] Error stopping bot: {str(e)}")
-    
-    def _toggle_pin(self):
-        self.is_pinned = not self.is_pinned
-        self.root.attributes('-topmost', self.is_pinned)
-        self.pin_button.configure(text="Unpin" if self.is_pinned else "Pin")
-        self.log("Window " + ("pinned" if self.is_pinned else "unpinned"))
+            self.log("please click into the game window to focus it")
             
     def _on_closing(self):
         """Handle window close event"""
-        # Remove global hotkey
-        keyboard.remove_hotkey('ctrl+c')
-        # Stop bot if running
-        if self.is_running:
-            self._stop_bot()
-        # Destroy window
-        self.root.destroy()
+        if not self.is_running:
+            self.root.destroy()
+        else:
+            self.log("[WARNING] Please wait for the bot to finish...")
 
     def log(self, message, level='info', debug=False):
         """

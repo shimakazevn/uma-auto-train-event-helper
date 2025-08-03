@@ -191,9 +191,7 @@ def main():
     bot = UmaMusumeBot()
     
     # Create GUI
-    gui = BotGUI(root, 
-                start_callback=bot.start_bot,
-                stop_callback=bot.stop_bot)
+    gui = BotGUI(root, start_callback=bot.start_bot)
     bot.gui = gui
     
     try:

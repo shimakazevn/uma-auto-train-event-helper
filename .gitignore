@@ -6,6 +6,7 @@ test_screenshots/
 *.pyc
 .DS_Store
 Thumbs.db
+backups/
 
 # Test files
 test_*.py

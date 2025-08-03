@@ -2,18 +2,6 @@
 title Uma Musume Auto Train Launcher
 color 0B
 
-REM Kiem tra quyen Admin
-net session >nul 2>&1
-if %errorLevel% == 0 (
-    echo [+] Dang chay voi quyen Admin
-) else (
-    echo [-] Chuong trinh can quyen Admin de cai dat...
-    echo [*] Dang yeu cau quyen Admin...
-    
-    powershell -Command "Start-Process -FilePath '%0' -Verb RunAs"
-    exit /b
-)
-
 :MENU
 cls
 echo ======================================
@@ -48,88 +36,67 @@ goto MENU
 :CHECK_DEPS
 cls
 echo ======================================
-echo      KIEM TRA PHAN MEM CAN THIET
+echo       KIEM TRA PYTHON
 echo ======================================
 echo.
 
-REM Kiem tra Git
-where git >nul 2>nul
-IF %ERRORLEVEL% NEQ 0 (
-    ECHO Git chua duoc cai dat.
-    ECHO Dang tim phuong thuc cai dat tu dong...
-    where winget >nul 2>nul
-    IF %ERRORLEVEL% EQU 0 (
-        ECHO Da tim thay winget. Dang thu cai dat Git bang winget...
-        winget install --id Git.Git -e --source winget --silent --accept-source-agreements --accept-package-agreements
-        IF %ERRORLEVEL% EQU 0 (
-            ECHO Cai dat Git thanh cong. Tu dong nap lai PATH...
-            call :RefreshEnv
-            where git >nul 2>nul
-            IF %ERRORLEVEL% NEQ 0 (
-                ECHO Khong the tu dong nap lai PATH. Vui long chay lai file nay.
-                pause >nul
-                exit /b
-            )
-            ECHO Nap lai PATH thanh cong.
-        ) ELSE (
-            ECHO Cai dat Git bang winget that bai. Vui long cai dat thu cong roi chay lai file.
-            pause > nul
-            exit /b
-        )
-    ) ELSE (
-        ECHO winget khong ton tai. Vui long cai dat Git thu cong va them vao PATH.
-        ECHO Link tai: https://git-scm.com/downloads
-        pause
-        exit /b
-    )
-)
-
 REM Kiem tra Python
-where py >nul 2>nul
-IF %ERRORLEVEL% NEQ 0 (
-    ECHO Python chua duoc cai dat.
-    ECHO Dang tim phuong thuc cai dat tu dong...
-    where winget >nul 2>nul
-    IF %ERRORLEVEL% EQU 0 (
-        ECHO Da tim thay winget. Dang thu cai dat Python bang winget...
-        winget install --id Python.Python.3 -e --source winget --silent --accept-source-agreements --accept-package-agreements
-        IF %ERRORLEVEL% EQU 0 (
-            ECHO Cai dat Python thanh cong. Tu dong nap lai PATH...
-            call :RefreshEnv
-            where py >nul 2>nul
-            IF %ERRORLEVEL% NEQ 0 (
-                ECHO Khong the tu dong nap lai PATH. Vui long chay lai file nay.
-                pause >nul
-                exit /b
-            )
-            ECHO Nap lai PATH thanh cong.
-        ) ELSE (
-            ECHO Cai dat Python bang winget that bai. Vui long cai dat thu cong roi chay lai file.
-            pause > nul
-            exit /b
-        )
-    ) ELSE (
-        ECHO winget khong ton tai. Vui long cai dat Python 3 thu cong va them vao PATH.
-        ECHO Link tai: https://www.python.org/downloads/
-        pause
-        exit /b
-    )
+where python >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [+] Da tim thay Python
+    goto CHECK_PYTHON_SUCCESS
 )
 
+where py >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [+] Da tim thay Python Launcher
+    goto CHECK_PYTHON_SUCCESS
+)
 
-REM Kiem tra Tesseract OCR
-set "TESSERACT_DIR=%~dp0Tesseract-OCR"
-if not exist "%TESSERACT_DIR%\tesseract.exe" (
-    ECHO [-] Tesseract OCR chua duoc cai dat.
-    ECHO [*] Vui long tai ve thu cong tu GitHub releases.
+echo [-] Python chua duoc cai dat
+echo [*] Dang tim phuong thuc cai dat tu dong...
+
+where winget >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo [-] Khong tim thay winget
+    echo [*] Vui long cai dat Python 3 thu cong va them vao PATH
+    echo [*] Link tai: https://www.python.org/downloads/
     pause
     goto MENU
-) else (
-    ECHO [+] Da tim thay Tesseract OCR
 )
 
+echo [+] Da tim thay winget
+echo [*] Dang thu cai dat Python bang winget...
+winget install --id Python.Python.3 -e --source winget --silent --accept-source-agreements --accept-package-agreements
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [-] Cai dat Python that bai
+    echo [*] Vui long cai dat thu cong roi chay lai
+    pause
+    goto MENU
+)
+
+echo [+] Cai dat Python thanh cong
+echo [*] Dang nap lai PATH...
+call :RefreshEnv
+powershell -Command "& {$env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')}"
+
+where python >nul 2>nul
+if %ERRORLEVEL% EQU 0 goto CHECK_PYTHON_SUCCESS
+
+where py >nul 2>nul
+if %ERRORLEVEL% EQU 0 goto CHECK_PYTHON_SUCCESS
+
+echo [-] Khong the tu dong nap lai PATH
+echo [*] Vui long khoi dong lai may tinh va chay lai file nay
+pause
+goto MENU
+
+:CHECK_PYTHON_SUCCESS
+
+
 ECHO.
-ECHO [+] Tat ca phan mem can thiet da san sang.
+ECHO [+] Python da san sang de su dung.
 timeout /t 2 >nul
 goto MENU
 
@@ -139,8 +106,27 @@ echo ======================================
 echo          KHOI DONG UMA BOT
 echo ======================================
 echo.
-echo [*] Dang khoi dong bot...
-python main.py
+echo [*] Dang kiem tra Python...
+
+where python >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [+] Su dung Python...
+    python main.py
+    goto START_BOT_END
+)
+
+where py >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [+] Su dung Python Launcher...
+    py main.py
+    goto START_BOT_END
+)
+
+echo [-] Khong tim thay Python! Hay chay chuc nang [6] de cai dat Python.
+pause >nul
+goto MENU
+
+:START_BOT_END
 echo.
 echo [*] Bot da dung. Nhan phim bat ky de tro ve menu.
 pause >nul
@@ -174,10 +160,11 @@ echo ======================================
 echo      CAI DAT GOI PHU THUOC
 echo ======================================
 echo.
-echo [*] Dang cai dat tu requirements.txt...
-pip install -r requirements.txt
+echo [*] Mo PowerShell voi quyen Admin de cai dat...
+powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoExit', '-Command', '$pythonPath = (Get-Command python -ErrorAction SilentlyContinue).Source; if (-not $pythonPath) { $pythonPath = (Get-Command py -ErrorAction SilentlyContinue).Source }; if ($pythonPath) { Write-Host ''Tim thay Python tai: $pythonPath''; Set-Location ''%~dp0''; Write-Host ''Dang cai dat cac goi phu thuoc...''; if ($pythonPath -like ''*\py.exe'') { py -m pip install -r requirements.txt } else { python -m pip install -r requirements.txt } } else { Write-Host ''Khong tim thay Python. Hay chay chuc nang [6] Kiem tra phan mem truoc.''; pause }'"
 echo.
-echo [+] Cai dat hoan tat!
+echo [+] Da mo PowerShell de cai dat. Vui long doi cho qua trinh cai dat hoan tat.
+echo [*] Dong cua so PowerShell sau khi cai dat xong.
 timeout /t 2 >nul
 goto MENU
 
