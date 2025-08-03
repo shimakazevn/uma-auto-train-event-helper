@@ -5,15 +5,17 @@ color 0B
 :MENU
 cls
 echo ======================================
-echo    UMA MUSUME AUTO TRAIN LAUNCHER
+echo    UMA MUSUME AUTO TRAIN AND EVENT HELPER OVERLAY
 echo ======================================
 echo.
-echo [1] Khoi dong bot
-echo [2] Cap nhat tu GitHub
-echo [3] Cai dat/Cap nhat phu thuoc
-echo [4] Sao luu config
-echo [5] Khoi phuc config
-echo [6] Kiem tra phan mem
+echo [1] Khoi dong BOT Auto Training
+echo [2] Khoi dong Event Helper Overlay    
+echo [3] Cap nhat tu GitHub
+echo [4] Cai dat/Cap nhat phu thuoc
+echo [5] Sao luu config
+echo [6] Khoi phuc config
+echo [7] Kiem tra phan mem
+
 echo [0] Thoat
 echo.
 echo ======================================
@@ -21,11 +23,12 @@ echo ======================================
 set /p choice="Nhap lua chon cua ban: "
 
 if "%choice%"=="1" goto START_BOT
-if "%choice%"=="2" goto UPDATE
-if "%choice%"=="3" goto INSTALL_DEPS
-if "%choice%"=="4" goto BACKUP_CONFIG
-if "%choice%"=="5" goto RESTORE_CONFIG
-if "%choice%"=="6" goto CHECK_DEPS
+if "%choice%"=="2" goto START_EVENT_OVERLAY
+if "%choice%"=="3" goto UPDATE
+if "%choice%"=="4" goto INSTALL_DEPS
+if "%choice%"=="5" goto BACKUP_CONFIG
+if "%choice%"=="6" goto RESTORE_CONFIG
+if "%choice%"=="7" goto CHECK_DEPS
 if "%choice%"=="0" exit
 
 echo.
@@ -206,8 +209,38 @@ copy /y "backups\%backup%" config.json >nul
 echo [+] Da khoi phuc config tu ban sao %backup%
 timeout /t 2 >nul
 goto MENU
-pause
-exit /b
+
+:START_EVENT_OVERLAY
+cls
+echo ======================================
+echo       KHOI DONG EVENT OVERLAY
+echo ======================================
+echo.
+echo [*] Dang kiem tra Python...
+
+where python >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [+] Su dung Python...
+    python utils/event_overlay.py
+    goto START_EVENT_OVERLAY_END
+)
+
+where py >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [+] Su dung Python Launcher...
+    py utils/event_overlay.py
+    goto START_EVENT_OVERLAY_END
+)
+
+echo [-] Khong tim thay Python! Hay chay chuc nang [6] de cai dat Python.
+pause >nul
+goto MENU
+
+:START_EVENT_OVERLAY_END
+echo.
+echo [*] Event Overlay da dung. Nhan phim bat ky de tro ve menu.
+pause >nul
+goto MENU
 
 :RefreshEnv
     ECHO Dang nap lai bien moi truong PATH...
