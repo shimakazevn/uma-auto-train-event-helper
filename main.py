@@ -156,8 +156,12 @@ class UmaMusumeBot:
             self.log("Bot loop ended")
 
     def log(self, message):
-        if self.gui:
-            self.gui.log(message)
+        if self.gui and hasattr(self.gui, 'log_area') and self.gui.log_area.winfo_exists():
+            try:
+                self.gui.log(message)
+            except tk.TclError:
+                # GUI has been destroyed, fall back to print
+                print(message)
         else:
             print(message)
 
@@ -183,7 +187,8 @@ class UmaMusumeBot:
             except Exception as e:
                 self.log(f"[WARNING] Error restoring game window: {str(e)}")
         
-        self.log("Cleanup completed")
+        # Use print instead of self.log to avoid GUI issues during cleanup
+        print("Cleanup completed")
 
 def main():
     print("Uma Auto!")

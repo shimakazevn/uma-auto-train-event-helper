@@ -1,20 +1,21 @@
 # Umamusume Auto Training Bot
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](http://discord.gg/PhVmBtfsKp)
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](http://discord.gg/BCS4FMX7Wy)
 
-[![GitHub Stars](https://img.shields.io/github/stars/Kisegami/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/Kisegami/umamusume-auto-train/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/Kisegami/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/Kisegami/umamusume-auto-train/issues)
-[![GitHub Forks](https://img.shields.io/github/forks/Kisegami/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/Kisegami/umamusume-auto-train/network)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/Kisegami/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/Kisegami/umamusume-auto-train/commits)
+[![GitHub Stars](https://img.shields.io/github/stars/shimakazevn/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/shimakazevn/umamusume-auto-train/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/shimakazevn/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/shimakazevn/umamusume-auto-train/issues)
+[![GitHub Forks](https://img.shields.io/github/forks/shimakazevn/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/shimakazevn/umamusume-auto-train/network)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/shimakazevn/umamusume-auto-train?style=for-the-badge&logo=github)](https://github.com/shimakazevn/umamusume-auto-train/commits)
  
 
-Like the title says, this is a simple auto training for Umamusume.
-Warning: need FullHD(1080P) or bigger screen monitor !
-if u have 2k or 4k monitor, screen will change the resolution.
-This project is inspired by [samsulpanjul/umamusume-auto-train](https://github.com/samsulpanjul/umamusume-auto-train)
+- Like the title says, this is a simple auto training for Umamusume and Event helper.
+- This pj use Tesseract-OCR to work so we need 1920x1080 or bigger screen monitor!
+- if u have 2k or 4k monitor, game will change the resolution to 1920x1080.
+- This project is inspired by [samsulpanjul/umamusume-auto-train](https://github.com/samsulpanjul/umamusume-auto-train) and [Kisegami/umamusume-auto-train](https://github.com/Kisegami/)
 
 [Demo video](https://youtu.be/CXSYVD-iMJk)
 
-![Screenshot](screenshot.png)
+![Screenshot](screenshot1.png)
+![Screenshot](screenshot2.png)
 
 ## Features
 
@@ -41,7 +42,7 @@ This project is inspired by [samsulpanjul/umamusume-auto-train](https://github.c
 #### Clone repository
 
 ```
-git clone https://github.com/Kisegami/umamusume-auto-train/
+git clone https://github.com/shimakazevn/umamusume-auto-train/
 ```
 
 #### Install dependencies
@@ -60,8 +61,8 @@ pip install -r requirements.txt
 
 Make sure these conditions are met:
 
-- Screen resolution must be 1920x1080
-- The game should be in fullscreen
+- Screen resolution must be 1920x1080 > 4k
+- The game should be in borderless
 - Your Uma must have already won the trophy for each race (the bot will skips the race)
 - Turn off all confirmation pop-ups in game settings
 - The game must be in the career lobby screen (the one with the Tazuna hint icon)

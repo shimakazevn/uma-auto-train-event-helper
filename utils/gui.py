@@ -252,59 +252,81 @@ class BotGUI:
             
     def _on_closing(self):
         """Handle window close event"""
-        if not self.is_running:
-            self.root.destroy()
-        else:
-            self.log("[WARNING] Please wait for the bot to finish...")
+        try:
+            if not self.is_running:
+                # Mark GUI as destroyed to prevent further log calls
+                self.root.destroy()
+            else:
+                self.log("[WARNING] Please wait for the bot to finish...")
+        except Exception as e:
+            # If there's any error, just destroy the window
+            try:
+                self.root.destroy()
+            except:
+                pass
 
     def log(self, message, level='info', debug=False):
         """
         Add a message to the log similar to console output format.
         """
-        # Determine message level and format from the content
-        msg_level = 'info'
-        log_text = message
-
-        # Check if message starts with a level indicator
-        if message.startswith('[WARNING]'):
-            msg_level = 'warning'
-        elif message.startswith('[ERROR]'):
-            msg_level = 'error'
-        elif message.startswith('[INFO]'):
+        try:
+            # Check if log_area still exists
+            if not hasattr(self, 'log_area') or not self.log_area.winfo_exists():
+                print(message)
+                return
+                
+            # Determine message level and format from the content
             msg_level = 'info'
-        elif message.startswith('=='):
-            msg_level = 'success'
-            log_text = f"\n{message}"
-        else:
-            # For messages without level prefix, detect type from content
-            if any([
-                "OCR:" in message,
-                "confidence:" in message.lower(),
-                "ratio:" in message.lower(),
-                "Analyzing" in message,
-                "->" in message and "{" in message,
-                "Current stats:" in message
-            ]):
-                msg_level = 'debug'
-            elif "WARNING" in message:
-                msg_level = 'warning'
-            elif "ERROR" in message:
-                msg_level = 'error'
-            elif any([
-                "SUCCESS" in message,
-                "Year:" in message,
-                "Best training:" in message
-            ]):
-                msg_level = 'success'
+            log_text = message
 
-        # Add newline if not present
-        if not log_text.endswith('\n'):
-            log_text += '\n'
+            # Check if message starts with a level indicator
+            if message.startswith('[WARNING]'):
+                msg_level = 'warning'
+            elif message.startswith('[ERROR]'):
+                msg_level = 'error'
+            elif message.startswith('[INFO]'):
+                msg_level = 'info'
+            elif message.startswith('=='):
+                msg_level = 'success'
+                log_text = f"\n{message}"
+            else:
+                # For messages without level prefix, detect type from content
+                if any([
+                    "OCR:" in message,
+                    "confidence:" in message.lower(),
+                    "ratio:" in message.lower(),
+                    "Analyzing" in message,
+                    "->" in message and "{" in message,
+                    "Current stats:" in message
+                ]):
+                    msg_level = 'debug'
+                elif "WARNING" in message:
+                    msg_level = 'warning'
+                elif "ERROR" in message:
+                    msg_level = 'error'
+                elif any([
+                    "SUCCESS" in message,
+                    "Year:" in message,
+                    "Best training:" in message
+                ]):
+                    msg_level = 'success'
+
+            # Add newline if not present
+            if not log_text.endswith('\n'):
+                log_text += '\n'
+                
+            # Write to log area
+            self.log_area.insert(tk.END, log_text, msg_level)
+            # Keep only last 1000 lines
+            content = self.log_area.get('1.0', tk.END).splitlines()
+            if len(content) > 1000:
+                self.log_area.delete('1.0', f"{len(content)-1000}.0")
+            self.log_area.see(tk.END)
             
-        # Write to log area
-        self.log_area.insert(tk.END, log_text, msg_level)
-        # Keep only last 1000 lines
-        content = self.log_area.get('1.0', tk.END).splitlines()
-        if len(content) > 1000:
-            self.log_area.delete('1.0', f"{len(content)-1000}.0")
-        self.log_area.see(tk.END)
+        except tk.TclError:
+            # Widget has been destroyed, fall back to print
+            print(message)
+        except Exception as e:
+            # Any other error, fall back to print
+            print(f"GUI log error: {e}")
+            print(message)
