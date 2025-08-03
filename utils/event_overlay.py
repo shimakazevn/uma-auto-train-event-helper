@@ -75,9 +75,9 @@ class GameWindow:
 class EventOverlay:
     def __init__(self):
         self.event_region = (243, 201, 365, 45)
-        self.overlay_x = 964
-        self.overlay_y = 757
-        self.overlay_width = 796
+        self.overlay_x = 958
+        self.overlay_y = 760
+        self.overlay_width = 798
         self.overlay_height = 320
         self.support_events = []
         self.uma_events = []
@@ -238,63 +238,88 @@ class EventOverlay:
         self.root.geometry(f"{self.overlay_width}x{self.overlay_height}+{self.overlay_x}+{self.overlay_y}")
         self.root.overrideredirect(True)
         self.root.attributes('-topmost', True)
-        self.root.attributes('-alpha', 0.95)  # Tăng độ trong suốt
         
         # Cải thiện style
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Tạo main frame với background đẹp hơn
-        self.main_frame = ttk.Frame(self.root, padding="15")
+        # Tạo main frame với background tối hoàn toàn
+        self.main_frame = ttk.Frame(self.root, padding="13")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Tạo frame cho header với background tối
+        header_frame = ttk.Frame(self.main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 10))
         
         # Title với font lớn hơn và màu đẹp hơn
         self.title_label = ttk.Label(
-            self.main_frame, 
+            header_frame, 
             text="🎮 Event Information", 
-            font=('Arial', 18, 'bold'), 
+            font=('Segoe UI', 10, 'bold'), 
             foreground='#4A90E2'
         )
-        self.title_label.pack(pady=(0, 15))
+        self.title_label.pack(side=tk.LEFT)
+        
+        # Nút close (X) với background tối
+        close_button = tk.Button(
+            header_frame,
+            text="✕",
+            font=('Segoe UI', 10, 'bold'),
+            fg='#FFFFFF',
+            bg='#E74C3C',
+            activebackground='#C0392B',
+            activeforeground='#FFFFFF',
+            relief=tk.FLAT,
+            borderwidth=0,
+            width=3,
+            height=1,
+            cursor='hand2',
+            command=self.on_closing
+        )
+        close_button.pack(side=tk.RIGHT, padx=(10, 0))
         
         # Event name label với font lớn hơn
         self.event_name_label = ttk.Label(
             self.main_frame, 
             text="Waiting for events...", 
-            font=('Arial', 16), 
+            font=('Segoe UI', 11), 
             foreground='#E74C3C'
+            
         )
         self.event_name_label.pack(pady=(0, 15))
         
-        # Text area với font lớn hơn và màu đẹp hơn
+        # Text area với font lớn hơn và background tối hoàn toàn
         self.options_text = tk.Text(
             self.main_frame, 
             height=10, 
             width=70, 
-            font=('Consolas', 12),  # Tăng font size từ 10 lên 12
+            font=('Consolas', 11),  # Tăng font size từ 10 lên 12
             wrap=tk.WORD, 
-            bg='#1E1E1E',  # Background tối hơn
+            bg='#000000',  # Background đen hoàn toàn
             fg='#FFFFFF', 
             insertbackground='white', 
             selectbackground='#4A90E2',
             relief=tk.FLAT,
-            borderwidth=0
+            borderwidth=0,  # Giảm borderwidth từ 2 xuống 0
+            padx=5,  # Thêm padding nhỏ cho text
+            pady=5   # Thêm padding nhỏ cho text
         )
-        self.options_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        self.options_text.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
         
         # Status label với font lớn hơn
         self.status_label = ttk.Label(
             self.main_frame, 
             text="🔄 Monitoring for events...", 
-            font=('Arial', 12),  # Tăng font size từ 10 lên 12
+            font=('Segoe UI', 10),  # Tăng font size từ 10 lên 12
             foreground='#95A5A6'
         )
-        self.status_label.pack()
+        self.status_label.pack(side=tk.LEFT)
         
-        # Scrollbar với style đẹp hơn
-        scrollbar = ttk.Scrollbar(self.main_frame, orient="vertical", command=self.options_text.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.options_text.configure(yscrollcommand=scrollbar.set)
+
+        
+        # Cấu hình style cho tất cả frame để có background tối
+        style.configure('TFrame', background='#1E1E1E')
+        style.configure('TLabel', background='#1E1E1E')
         
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.monitor_events()
@@ -498,7 +523,6 @@ class EventOverlay:
                 
                 # Options header
                 self.options_text.insert(tk.END, "🎯 Options:\n", "header")
-                self.options_text.insert(tk.END, "\n")
                 
                 options = event_data["options"]
                 if options:
@@ -513,22 +537,21 @@ class EventOverlay:
                         # Reward với màu khác
                         reward_text = f"      → {reward_single_line}\n"
                         self.options_text.insert(tk.END, reward_text, "reward")
-                        self.options_text.insert(tk.END, "\n")
                     
                     # Tổng số options
                     option_count = len(options)
-                    total_text = f"📊 Total options: {option_count}\n"
+                    total_text = f"\n📊 Total options: {option_count}\n"
                     self.options_text.insert(tk.END, total_text, "total")
                 else:
                     self.options_text.insert(tk.END, "   No valid options found\n", "no_options")
             
             # Cấu hình tags cho màu sắc
-            self.options_text.tag_configure("source", foreground="#4A90E2", font=('Consolas', 12, 'bold'))
-            self.options_text.tag_configure("header", foreground="#E74C3C", font=('Consolas', 12, 'bold'))
-            self.options_text.tag_configure("option_name", foreground="#F39C12", font=('Consolas', 12))
-            self.options_text.tag_configure("reward", foreground="#27AE60", font=('Consolas', 11))
-            self.options_text.tag_configure("total", foreground="#9B59B6", font=('Consolas', 12, 'bold'))
-            self.options_text.tag_configure("no_options", foreground="#E74C3C", font=('Consolas', 12))
+            self.options_text.tag_configure("source", foreground="#4A90E2", font=('Consolas', 11, 'bold'))
+            self.options_text.tag_configure("header", foreground="#E74C3C", font=('Consolas', 11, 'bold'))
+            self.options_text.tag_configure("option_name", foreground="#F39C12", font=('Consolas', 11))
+            self.options_text.tag_configure("reward", foreground="#27AE60", font=('Consolas', 10))
+            self.options_text.tag_configure("total", foreground="#9B59B6", font=('Consolas', 11, 'bold'))
+            self.options_text.tag_configure("no_options", foreground="#E74C3C", font=('Consolas', 11))
             
             self.status_label.config(text="✅ Event found!", foreground='#28A745')
         else:
@@ -537,12 +560,11 @@ class EventOverlay:
             
             # Format error message đẹp hơn
             self.options_text.insert(tk.END, "❌ Unknown event - not found in database\n", "error")
-            self.options_text.insert(tk.END, "\n")
             self.options_text.insert(tk.END, f"Searched for: '{event_name}'\n", "searched")
             
             # Cấu hình tags cho error
-            self.options_text.tag_configure("error", foreground="#E74C3C", font=('Consolas', 12, 'bold'))
-            self.options_text.tag_configure("searched", foreground="#95A5A6", font=('Consolas', 11))
+            self.options_text.tag_configure("error", foreground="#E74C3C", font=('Consolas', 11, 'bold'))
+            self.options_text.tag_configure("searched", foreground="#95A5A6", font=('Consolas', 10))
             
             self.status_label.config(text="❌ Unknown event", foreground='#DC3545')
 
