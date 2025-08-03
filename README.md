@@ -14,8 +14,8 @@
 
 [Demo video](https://youtu.be/CXSYVD-iMJk)
 
-![Screenshot](screenshot1.png)
-![Screenshot](screenshot2.png)
+![Screenshot1](screenshot1.png)
+![Screenshot2](screenshot2.png)
 
 ## Features
 
