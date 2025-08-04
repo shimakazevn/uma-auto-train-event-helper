@@ -7,7 +7,7 @@ from pyautogui import ImageNotFoundException
 pyautogui.useImageNotFoundException(False)
 
 from core.state import check_support_card, check_failure, check_turn, check_mood, check_current_year, check_criteria, check_skill_points_cap
-from core.logic import do_something, do_something_fallback, all_training_unsafe, MAX_FAILURE
+from core.logic import do_something, do_something_fallback, all_training_unsafe
 from utils.constants import MOOD_LIST
 # Event handling functions integrated directly into execute.py
 
@@ -616,12 +616,6 @@ def is_racing_available(year):
 from core.recognizer import is_infirmary_active, match_template
 from utils.scenario import ura
 
-with open("config.json", "r", encoding="utf-8") as file:
-  config = json.load(file)
-
-MINIMUM_MOOD = config["minimum_mood"]
-PRIORITIZE_G1_RACE = config["prioritize_g1_race"]
-
 def click(img, confidence = 0.8, minSearch = 2, click = 1, text = ""):
   btn = pyautogui.locateCenterOnScreen(img, confidence=confidence, minSearchTime=minSearch)
   if btn:
@@ -747,7 +741,6 @@ def do_race(prioritize_g1 = False):
 
 def race_day():
   # Check skill points cap before race day (if enabled)
-  import json
   
   # Load config to check if skill point check is enabled
   with open("config.json", "r", encoding="utf-8") as file:
@@ -905,7 +898,11 @@ def career_lobby():
 
     mood = check_mood()
     mood_index = MOOD_LIST.index(mood)
-    minimum_mood = MOOD_LIST.index(MINIMUM_MOOD)
+    # Load config dynamically to respect changes
+    with open("config.json", "r", encoding="utf-8") as file:
+        current_config = json.load(file)
+    current_minimum_mood = current_config.get("minimum_mood", "GOOD")
+    minimum_mood = MOOD_LIST.index(current_minimum_mood)
     turn = check_turn()
     year = check_current_year()
     criteria = check_criteria()
@@ -942,7 +939,6 @@ def career_lobby():
       print("[INFO] URA Finale")
       
       # Check skill points cap before URA race day (if enabled)
-      import json
       
       # Load config to check if skill point check is enabled
       with open("config.json", "r", encoding="utf-8") as file:
@@ -980,9 +976,14 @@ def career_lobby():
 
     year_parts = year.split(" ")
     # If Prioritize G1 Race is true, check G1 race every turn
-    if PRIORITIZE_G1_RACE and "Pre-Debut" not in year and is_racing_available(year):
+    # Load config dynamically to respect changes
+    with open("config.json", "r", encoding="utf-8") as file:
+        current_config = json.load(file)
+    current_prioritize_g1 = current_config.get("prioritize_g1_race", False)
+    
+    if current_prioritize_g1 and "Pre-Debut" not in year and is_racing_available(year):
       print("G1 Race Check: Looking for G1 race...")
-      g1_race_found = do_race(PRIORITIZE_G1_RACE)
+      g1_race_found = do_race(current_prioritize_g1)
       if g1_race_found:
         print("G1 Race Result: Found G1 Race")
         continue
@@ -1034,7 +1035,11 @@ def career_lobby():
       
       # Check if all training options are unsafe before attempting race
       if all_training_unsafe(results_training):
-        print(f"[INFO] All training options have failure rate > {MAX_FAILURE}%. Skipping race and choosing to rest.")
+        # Load config to get max_failure value
+        with open("config.json", "r", encoding="utf-8") as file:
+            current_config = json.load(file)
+        max_failure = current_config.get("maximum_failure", 15)
+        print(f"[INFO] All training options have failure rate > {max_failure}%. Skipping race and choosing to rest.")
         do_rest()
         continue
       
